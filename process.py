@@ -5,6 +5,9 @@ class Buffer:
     def __init__(self, capacity):
         self.capacity = capacity
         self.requests = []
+
+    def __repr__(self):
+        return "Buffer full on {}/{}".format(len(self.requests), self.capacity)
         
     def is_full(self):
         return (len(self.requests) >= self.capacity)
@@ -39,8 +42,13 @@ class Processor:
         self.expected_processing = expected_processing
 
     def __repr__(self):
-        return "Processor <{}>, free in {}".format(self.name, self.time_till_free)
-        
+        proc_info = "Processor <{}>, free in {}".format(
+                self.name, self.time_till_free)
+        if self.buffer:
+            proc_info += "\n\t with: {}".format(self.buffer.__repr__())
+
+        return proc_info
+
     def process(self):
         ''' Reduces `time till free` counter. 
         
@@ -69,7 +77,7 @@ class Processor:
     
     def _get_processing_time(self):
         ''' Returns the time from now in '''
-        return random.expovariate(self.expected_processing)
+        return random.expovariate(1/self.expected_processing)
         
     def add_process(self, request):
         ''' Adds request either to the process or to the attached buffer. 
@@ -80,7 +88,7 @@ class Processor:
         Returns:
             int: the time of processing, 0 if this request can not be processed
         '''
-        if not self.time_till_free:
+        if self.time_till_free == 0:
             self.time_till_free = int(self._get_processing_time())
         # check if Process has a buffer and it's not full
         elif self.buffer and not self.buffer.is_full():
